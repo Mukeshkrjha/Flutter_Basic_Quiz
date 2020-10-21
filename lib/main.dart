@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_basic_quiz_app/quizBrain.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
+QuizBrain brain = QuizBrain();
 void main() {
   runApp(MyQuizApp());
 }
@@ -27,15 +30,49 @@ class QuizPage extends StatefulWidget {
 class _QuizPageState extends State<QuizPage> {
   List<Icon> scoreKeeper = [];
 
-  List<String> questions = [
-    'You can lead a cow down stairs but not up stairs.',
-    'Approximately one quarter of human bones are in the feet.',
-    'A slug\'s blood is green.'
-  ];
+  void checkAnswer(bool userAnswer) {
+    setState(() {
+      if (!brain.isQuizEnded()) {
+        if (userAnswer == brain.getAnswer()) {
+          scoreKeeper.add(Icon(
+            Icons.check,
+            color: Colors.green,
+          ));
+        } else {
+          scoreKeeper.add(Icon(
+            Icons.close,
+            color: Colors.red,
+          ));
+        }
 
-  List<bool> answers = [false, true, true];
-
-  int questionNumber = 0;
+        brain.nextQuestion();
+      } else {
+        Alert(
+          context: context,
+          type: AlertType.info,
+          title: "QUIZ ENDED",
+          desc: "Thanks for participating in quiz!!",
+          onWillPopActive: true,
+          buttons: [
+            DialogButton(
+              child: Text(
+                "RESTART",
+                style: TextStyle(color: Colors.white, fontSize: 20),
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                setState(() {
+                  brain.restartQuiz();
+                  scoreKeeper = [];
+                });
+              },
+              width: 120,
+            )
+          ],
+        ).show();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +93,7 @@ class _QuizPageState extends State<QuizPage> {
                 padding: EdgeInsets.all(10.0),
                 child: Center(
                   child: Text(
-                    questions[questionNumber],
+                    brain.getQuestion(),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 25.0,
@@ -64,6 +101,13 @@ class _QuizPageState extends State<QuizPage> {
                     ),
                   ),
                 ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: scoreKeeper,
               ),
             ),
             Expanded(
@@ -80,25 +124,7 @@ class _QuizPageState extends State<QuizPage> {
                     ),
                   ),
                   onPressed: () {
-                    setState(() {
-                      if (true == answers[questionNumber]) {
-                        scoreKeeper.add(Icon(
-                          Icons.check,
-                          color: Colors.green,
-                        ));
-                      } else {
-                        scoreKeeper.add(Icon(
-                          Icons.close,
-                          color: Colors.red,
-                        ));
-                      }
-
-                      if (questionNumber < questions.length) {
-                        questionNumber++;
-                      } else {
-                        questionNumber = 0;
-                      }
-                    });
+                    checkAnswer(true);
                   },
                 ),
               ),
@@ -116,32 +142,11 @@ class _QuizPageState extends State<QuizPage> {
                     ),
                   ),
                   onPressed: () {
-                    setState(() {
-                      if (false == answers[questionNumber]) {
-                        scoreKeeper.add(Icon(
-                          Icons.check,
-                          color: Colors.green,
-                        ));
-                      } else {
-                        scoreKeeper.add(Icon(
-                          Icons.close,
-                          color: Colors.red,
-                        ));
-                      }
-
-                      if (questionNumber < questions.length) {
-                        questionNumber++;
-                      } else {
-                        questionNumber = 0;
-                      }
-                    });
+                    checkAnswer(false);
                   },
                 ),
               ),
             ),
-            Row(
-              children: scoreKeeper,
-            )
           ],
         ),
       ),
